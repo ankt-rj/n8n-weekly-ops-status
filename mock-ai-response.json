@@ -1,0 +1,8 @@
+{
+  "content": [
+    {
+      "type": "text",
+      "text": "{\"headline\": \"One workstream is red: Site readiness missed its 2 October inspection milestone, and a EUR 4,200 expedite decision is needed by 8 October. Three of six workstreams are green.\", \"attention\": [\"Approve or decline the EUR 4,200 inspection expedite fee by 8 October (D-01). Declining means about a 9 day slip.\", \"Site readiness is red and its inspection milestone is 3 days overdue. No inspection slot exists before 14 October.\", \"Decide the salary band change for two open roles by 14 October (D-02). Two offers have already been declined.\"], \"watch\": [\"Compliance filings is amber with no update for 13 days and a single external reviewer. Filing is due 12 October.\", \"Hiring plan is amber at 7 of 12 offers accepted, with all roles targeted for 23 October.\"]}"
+    }
+  ]
+}

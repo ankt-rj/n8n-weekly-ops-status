@@ -1,0 +1,7 @@
+ID,Type,Description,Owner,Severity,Decision Needed By,Status,Mitigation / Options
+R-01,Risk,Inspection slot not available before 14 Oct. Site mobilisation would slip.,Marcus,High,,Open,Request alternate inspector or expedite the booking
+R-02,Risk,Salary band is below market for two open roles.,Elena,Medium,,Open,Adjust band or extend the search
+R-03,Risk,Single external reviewer for compliance filings.,Sana,Medium,,Open,Engage a backup reviewer
+D-00,Decision,Select fifth vendor.,Priya,,2026-09-30,Closed,Selected on 28 Sep
+D-01,Decision,Approve expedite fee for site inspection (EUR 4200).,Marcus,,2026-10-08,Open,Approve the fee or accept a 9 day slip
+D-02,Decision,Adjust salary band for two open roles.,Elena,,2026-10-14,Open,Raise band by 8% or hold and extend the search

@@ -1,0 +1,7 @@
+[
+  {"summary": "Steering committee", "start": {"dateTime": "2026-10-07T10:00:00+02:00"}},
+  {"summary": "Team lunch", "start": {"dateTime": "2026-10-07T12:30:00+02:00"}},
+  {"summary": "Board pack review", "start": {"dateTime": "2026-10-09T14:00:00+02:00"}},
+  {"summary": "Supplier call", "start": {"dateTime": "2026-10-08T09:00:00+02:00"}},
+  {"summary": "Go-live decision meeting", "start": {"dateTime": "2026-10-10T11:00:00+02:00"}}
+]

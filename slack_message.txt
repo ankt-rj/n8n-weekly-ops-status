@@ -1,0 +1,7 @@
+*Weekly Operational Status, week of 2026-10-05*
+One workstream is red: Site readiness missed its 2 October inspection milestone, and a EUR 4,200 expedite decision is needed by 8 October. Three of six workstreams are green.
+:large_green_circle: 3  :large_yellow_circle: 2  :red_circle: 1  |  Decisions open: 2  |  High risks: 1
+*Needs attention*
+• Approve or decline the EUR 4,200 inspection expedite fee by 8 October (D-01). Declining means about a 9 day slip.
+• Site readiness is red and its inspection milestone is 3 days overdue. No inspection slot exists before 14 October.
+• Decide the salary band change for two open roles by 14 October (D-02). Two offers have already been declined.

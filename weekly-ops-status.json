@@ -1,0 +1,485 @@
+{
+  "name": "Weekly Operational Status Update",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Weekly Operational Status\nPulls workstreams, risks/decisions and leadership calendar checkpoints, computes the roll-up in code, drafts an executive summary with Claude, and emails a formatted report **to the reviewer first**.\n\nStart with the **Config** node. Full setup: docs/setup.md",
+        "height": 200,
+        "width": 420,
+        "color": 4
+      },
+      "id": "n-sticky-1",
+      "name": "Note: Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "**Numbers are computed in code, not by the model.** The AI step only writes the headline and the attention/watch lists from the computed facts. If it fails or is disabled, the report still sends with a rule-based summary.",
+        "height": 150,
+        "width": 380,
+        "color": 5
+      },
+      "id": "n-sticky-2",
+      "name": "Note: AI boundary",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1260,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "weeks",
+              "weeksInterval": 1,
+              "triggerAtDay": [
+                1
+              ],
+              "triggerAtHour": 7
+            }
+          ]
+        }
+      },
+      "id": "n-trigger",
+      "name": "Monday 07:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "n-manual",
+      "name": "Manual Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        160
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "reportTitle",
+              "name": "reportTitle",
+              "value": "Weekly Operational Status",
+              "type": "string"
+            },
+            {
+              "id": "sheetId",
+              "name": "sheetId",
+              "value": "REPLACE_WITH_GOOGLE_SHEET_ID",
+              "type": "string"
+            },
+            {
+              "id": "workstreamsTab",
+              "name": "workstreamsTab",
+              "value": "Workstreams",
+              "type": "string"
+            },
+            {
+              "id": "risksTab",
+              "name": "risksTab",
+              "value": "Risks and Decisions",
+              "type": "string"
+            },
+            {
+              "id": "calendarId",
+              "name": "calendarId",
+              "value": "primary",
+              "type": "string"
+            },
+            {
+              "id": "calendarKeywords",
+              "name": "calendarKeywords",
+              "value": "steering|review|board|milestone|decision|go-live|deadline",
+              "type": "string"
+            },
+            {
+              "id": "reviewRecipient",
+              "name": "reviewRecipient",
+              "value": "you@example.com",
+              "type": "string"
+            },
+            {
+              "id": "model",
+              "name": "model",
+              "value": "claude-sonnet-5-5",
+              "type": "string"
+            },
+            {
+              "id": "staleAfterDays",
+              "name": "staleAfterDays",
+              "value": "10",
+              "type": "string"
+            },
+            {
+              "id": "milestoneHorizonDays",
+              "name": "milestoneHorizonDays",
+              "value": "14",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "n-config",
+      "name": "Config",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.workstreamsTab }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "n-ws",
+      "name": "Read Workstreams",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        480,
+        80
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "sheet",
+        "operation": "read",
+        "documentId": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.sheetId }}",
+          "mode": "id"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.risksTab }}",
+          "mode": "name"
+        },
+        "options": {}
+      },
+      "id": "n-rd",
+      "name": "Read Risks and Decisions",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.5,
+      "position": [
+        720,
+        80
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "={{ $('Config').first().json.calendarId }}",
+          "mode": "id"
+        },
+        "returnAll": false,
+        "limit": 50,
+        "options": {
+          "timeMin": "={{ $now.toISO() }}",
+          "timeMax": "={{ $now.plus({days: 7}).toISO() }}",
+          "singleEvents": true
+        }
+      },
+      "id": "n-cal",
+      "name": "Read Calendar",
+      "type": "n8n-nodes-base.googleCalendar",
+      "typeVersion": 1.3,
+      "position": [
+        960,
+        80
+      ],
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "REPLACE_ME",
+          "name": "Google Calendar account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Consolidate: read the three sources, normalise, and compute what leadership needs to see.\nconst cfg = $('Config').first().json;\nconst DAY = 86400000;\nconst today = new Date(); today.setHours(0, 0, 0, 0);\n\nconst toDate = v => { if (!v) return null; const d = new Date(v); return isNaN(d) ? null : d; };\nconst dayDiff = d => d ? Math.round((d - today) / DAY) : null;\nconst iso = d => d ? d.toISOString().slice(0, 10) : '';\nconst rows = name => {\n  try { return $(name).all().map(i => i.json).filter(r => r && Object.keys(r).length > 0); }\n  catch (e) { return []; }\n};\nconst status = v => {\n  const s = String(v || '').trim().toLowerCase();\n  return ['green', 'amber', 'red'].includes(s) ? s : 'unknown';\n};\n\nconst staleAfter = Number(cfg.staleAfterDays) || 10;\nconst horizon = Number(cfg.milestoneHorizonDays) || 14;\n\n// 1. Workstreams\nconst workstreams = rows('Read Workstreams').filter(r => r.Workstream).map(r => {\n  const due = toDate(r['Milestone Due']);\n  const updated = toDate(r['Last Updated']);\n  const pct = String(r['% Complete'] ?? '').replace('%', '').trim();\n  const daysToDue = dayDiff(due);\n  const sinceUpdate = updated ? -dayDiff(updated) : null;\n  return {\n    name: r.Workstream,\n    owner: r.Owner || 'Unassigned',\n    status: status(r.Status),\n    pctComplete: pct === '' ? null : Number(pct),\n    progress: r['This Week Progress'] || '',\n    milestone: r['Next Milestone'] || '',\n    milestoneDue: iso(due),\n    daysToDue,\n    blockers: r.Blockers || '',\n    daysSinceUpdate: sinceUpdate,\n    overdue: daysToDue !== null && daysToDue < 0 && pct !== '100',\n    stale: sinceUpdate !== null && sinceUpdate > staleAfter,\n    noUpdate: updated === null,\n  };\n});\n\n// 2. Risks and decisions\nconst log = rows('Read Risks and Decisions').filter(r => r.Description).map(r => {\n  const needBy = toDate(r['Decision Needed By']);\n  return {\n    id: r.ID || '',\n    type: String(r.Type || '').trim().toLowerCase() === 'decision' ? 'decision' : 'risk',\n    description: r.Description,\n    owner: r.Owner || 'Unassigned',\n    severity: String(r.Severity || '').trim().toLowerCase() || 'unrated',\n    needBy: iso(needBy),\n    daysToNeedBy: dayDiff(needBy),\n    status: String(r.Status || 'Open').trim().toLowerCase(),\n    options: r['Mitigation / Options'] || '',\n  };\n}).filter(r => r.status !== 'closed');\n\nconst sevRank = { high: 0, medium: 1, low: 2 };\nconst risks = log.filter(r => r.type === 'risk')\n  .sort((a, b) => (sevRank[a.severity] ?? 3) - (sevRank[b.severity] ?? 3));\nconst decisions = log.filter(r => r.type === 'decision')\n  .sort((a, b) => (a.daysToNeedBy ?? 9999) - (b.daysToNeedBy ?? 9999));\n\n// 3. Calendar: only events that look like leadership checkpoints\nconst kw = new RegExp(cfg.calendarKeywords || 'steering|review|board|milestone|decision|go-live|deadline', 'i');\nconst events = rows('Read Calendar').map(e => {\n  const start = (e.start && (e.start.dateTime || e.start.date)) || e.start || '';\n  return { title: e.summary || e.title || '', start: String(start).slice(0, 16).replace('T', ' ') };\n}).filter(e => e.title && kw.test(e.title)).slice(0, 10);\n\n// 4. Roll-up\nconst count = s => workstreams.filter(w => w.status === s).length;\nconst facts = {\n  weekOf: iso(today),\n  counts: {\n    workstreams: workstreams.length,\n    green: count('green'), amber: count('amber'), red: count('red'), unknown: count('unknown'),\n    overdueMilestones: workstreams.filter(w => w.overdue).length,\n    staleUpdates: workstreams.filter(w => w.stale || w.noUpdate).length,\n    openRisks: risks.length,\n    highRisks: risks.filter(r => r.severity === 'high').length,\n    openDecisions: decisions.length,\n    decisionsDueThisWeek: decisions.filter(d => d.daysToNeedBy !== null && d.daysToNeedBy <= 7).length,\n  },\n  needsAttention: workstreams.filter(w => w.status === 'red' || w.overdue),\n  watchList: workstreams.filter(w => w.status === 'amber' && !w.overdue),\n  upcomingMilestones: workstreams\n    .filter(w => w.daysToDue !== null && w.daysToDue >= 0 && w.daysToDue <= horizon)\n    .sort((a, b) => a.daysToDue - b.daysToDue),\n  staleOwners: workstreams.filter(w => w.stale || w.noUpdate).map(w => ({ name: w.name, owner: w.owner, daysSinceUpdate: w.daysSinceUpdate })),\n  workstreams, risks, decisions, events,\n};\n\n// 5. Request for the AI summary (kept separate so the numbers above never depend on the model)\nconst system = 'You write the executive summary of a weekly operational status report for a leadership team. ' +\n  'Use only the facts in the data provided. Do not invent numbers, names, causes or dates. If something is unknown, say so. ' +\n  'Plain, direct language. Respond with JSON only, no preamble, in this shape: ' +\n  '{\"headline\": string (maximum 2 sentences), \"attention\": string[] (maximum 3 items leadership must act on or decide this week), ' +\n  '\"watch\": string[] (maximum 3 items likely to become problems within two weeks)}.';\n\nconst slim = {\n  weekOf: facts.weekOf, counts: facts.counts,\n  needsAttention: facts.needsAttention.map(w => ({ name: w.name, owner: w.owner, status: w.status, overdue: w.overdue, blockers: w.blockers, progress: w.progress })),\n  watchList: facts.watchList.map(w => ({ name: w.name, owner: w.owner, blockers: w.blockers, milestone: w.milestone, milestoneDue: w.milestoneDue })),\n  decisions: decisions.slice(0, 8).map(d => ({ id: d.id, description: d.description, owner: d.owner, needBy: d.needBy, options: d.options })),\n  highRisks: risks.filter(r => r.severity === 'high').map(r => ({ id: r.id, description: r.description, owner: r.owner, options: r.options })),\n  upcomingMilestones: facts.upcomingMilestones.map(w => ({ name: w.name, milestone: w.milestone, due: w.milestoneDue })),\n  staleOwners: facts.staleOwners,\n};\n\nreturn [{ json: {\n  facts,\n  aiRequest: {\n    model: cfg.model,\n    max_tokens: 1000,\n    system,\n    messages: [{ role: 'user', content: 'Weekly data:\\n' + JSON.stringify(slim) }],\n  },\n} }];\n"
+      },
+      "id": "n-cons",
+      "name": "Consolidate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.anthropic.com/v1/messages",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "anthropic-version",
+              "value": "2023-06-01"
+            },
+            {
+              "name": "content-type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($json.aiRequest) }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "n-ai",
+      "name": "AI Executive Summary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1440,
+        80
+      ],
+      "onError": "continueRegularOutput",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "REPLACE_ME",
+          "name": "Anthropic API key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Build Report: merge the numbers with the AI summary (or a rule-based fallback) and render email + Slack text.\nconst cfg = $('Config').first().json;\nconst facts = $('Consolidate').first().json.facts;\nconst c = facts.counts;\n\n// AI summary is optional. If the call failed or the node is disabled, fall back to rules.\nlet ai = null;\ntry {\n  const raw = $input.first().json.content[0].text;\n  ai = JSON.parse(raw.replace(/```json|```/g, '').trim());\n} catch (e) { ai = null; }\n\nconst plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;\nconst fallbackHeadline = `${c.green} green, ${c.amber} amber and ${c.red} red across ${plural(c.workstreams, 'workstream')}. ` +\n  `${plural(c.overdueMilestones, 'milestone')} overdue and ${plural(c.openDecisions, 'decision')} open.`;\nconst fallbackAttention = [\n  ...facts.needsAttention.map(w => `${w.name} (${w.owner}): ${w.status === 'red' ? 'red' : 'overdue'}${w.blockers ? '. Blocker: ' + w.blockers : ''}`),\n  ...facts.decisions.filter(d => d.daysToNeedBy !== null && d.daysToNeedBy <= 7).map(d => `Decision ${d.id} needed by ${d.needBy}: ${d.description}`),\n].slice(0, 3);\nconst fallbackWatch = facts.watchList.map(w => `${w.name} (${w.owner}) is amber${w.blockers ? '. ' + w.blockers : ''}`).slice(0, 3);\n\nconst headline = (ai && ai.headline) || fallbackHeadline;\nconst attention = (ai && Array.isArray(ai.attention) && ai.attention) || fallbackAttention;\nconst watch = (ai && Array.isArray(ai.watch) && ai.watch) || fallbackWatch;\n\nconst esc = s => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');\nconst dot = { green: '#2e7d32', amber: '#ed8e00', red: '#c62828', unknown: '#757575' };\nconst label = { green: 'Green', amber: 'Amber', red: 'Red', unknown: 'No status' };\n\n// ---------- Markdown ----------\nconst md = [];\nmd.push(`# ${cfg.reportTitle}: week of ${facts.weekOf}`, '');\nmd.push(`**${headline}**`, '');\nmd.push(`| Green | Amber | Red | Overdue milestones | Open decisions | High risks |`, `|---|---|---|---|---|---|`);\nmd.push(`| ${c.green} | ${c.amber} | ${c.red} | ${c.overdueMilestones} | ${c.openDecisions} | ${c.highRisks} |`, '');\nmd.push('## Needs leadership attention', ...(attention.length ? attention.map(a => `- ${a}`) : ['- Nothing flagged this week.']), '');\nmd.push('## Watch list', ...(watch.length ? watch.map(a => `- ${a}`) : ['- Nothing on the watch list.']), '');\nmd.push('## Workstreams', '', '| Workstream | Owner | Status | Done | Progress this week | Next milestone | Due |', '|---|---|---|---|---|---|---|');\nfacts.workstreams.forEach(w => md.push(`| ${w.name} | ${w.owner} | ${label[w.status]}${w.overdue ? ' (overdue)' : ''} | ${w.pctComplete ?? ''}${w.pctComplete !== null ? '%' : ''} | ${w.progress} | ${w.milestone} | ${w.milestoneDue} |`));\nmd.push('', '## Decisions needed', '');\nif (facts.decisions.length) { md.push('| ID | Decision | Owner | Needed by | Options |', '|---|---|---|---|---|'); facts.decisions.forEach(d => md.push(`| ${d.id} | ${d.description} | ${d.owner} | ${d.needBy} | ${d.options} |`)); } else { md.push('None open.'); }\nmd.push('', '## Open risks', '');\nif (facts.risks.length) { md.push('| ID | Risk | Severity | Owner | Mitigation |', '|---|---|---|---|---|'); facts.risks.forEach(r => md.push(`| ${r.id} | ${r.description} | ${r.severity} | ${r.owner} | ${r.options} |`)); } else { md.push('None open.'); }\nmd.push('', '## Next 7 days: leadership checkpoints', ...(facts.events.length ? facts.events.map(e => `- ${e.start}: ${e.title}`) : ['- None in the calendar.']));\nif (facts.staleOwners.length) md.push('', '## Updates missing or stale', ...facts.staleOwners.map(s => `- ${s.name} (${s.owner}): ${s.daysSinceUpdate === null ? 'no update date recorded' : s.daysSinceUpdate + ' days since last update'}`));\nmd.push('', `_${ai ? 'Summary drafted with AI from the data above.' : 'Summary generated by rules, without AI.'} All figures come directly from the source sheets._`);\n\n// ---------- HTML ----------\nconst th = 'style=\"text-align:left;padding:6px 8px;border-bottom:2px solid #ddd;font-size:12px;color:#555\"';\nconst td = 'style=\"padding:6px 8px;border-bottom:1px solid #eee;font-size:13px;vertical-align:top\"';\nconst table = (heads, body) => `<table style=\"border-collapse:collapse;width:100%;margin:6px 0 18px\"><tr>${heads.map(h => `<th ${th}>${h}</th>`).join('')}</tr>${body}</table>`;\nconst row = cells => `<tr>${cells.map(x => `<td ${td}>${x}</td>`).join('')}</tr>`;\nconst chip = s => `<span style=\"color:${dot[s]};font-weight:600\">&#9679; ${label[s]}</span>`;\nconst stat = (n, l, col) => `<td style=\"padding:10px 14px;text-align:center;border:1px solid #eee\"><div style=\"font-size:22px;font-weight:700;color:${col || '#222'}\">${n}</div><div style=\"font-size:11px;color:#666\">${l}</div></td>`;\nconst ul = items => `<ul style=\"margin:6px 0 16px;padding-left:20px;font-size:14px\">${items.map(i => `<li style=\"margin-bottom:4px\">${esc(i)}</li>`).join('')}</ul>`;\nconst h2 = t => `<h2 style=\"font-size:15px;margin:22px 0 4px;color:#222\">${t}</h2>`;\n\nlet html = `<div style=\"font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;max-width:820px;color:#222\">`;\nhtml += `<h1 style=\"font-size:20px;margin-bottom:4px\">${esc(cfg.reportTitle)}</h1><div style=\"color:#666;font-size:13px;margin-bottom:14px\">Week of ${facts.weekOf}</div>`;\nhtml += `<p style=\"font-size:15px;line-height:1.5\">${esc(headline)}</p>`;\nhtml += `<table style=\"border-collapse:collapse;margin:10px 0 6px\"><tr>${stat(c.green, 'Green', dot.green)}${stat(c.amber, 'Amber', dot.amber)}${stat(c.red, 'Red', dot.red)}${stat(c.overdueMilestones, 'Overdue milestones')}${stat(c.openDecisions, 'Open decisions')}${stat(c.highRisks, 'High risks')}</tr></table>`;\nhtml += h2('Needs leadership attention') + (attention.length ? ul(attention) : '<p style=\"font-size:14px\">Nothing flagged this week.</p>');\nhtml += h2('Watch list') + (watch.length ? ul(watch) : '<p style=\"font-size:14px\">Nothing on the watch list.</p>');\nhtml += h2('Workstreams') + table(['Workstream', 'Owner', 'Status', 'Done', 'Progress this week', 'Next milestone', 'Due'],\n  facts.workstreams.map(w => row([esc(w.name), esc(w.owner), chip(w.status) + (w.overdue ? ' <b style=\"color:#c62828\">overdue</b>' : ''), w.pctComplete !== null ? w.pctComplete + '%' : '', esc(w.progress), esc(w.milestone), esc(w.milestoneDue)])).join(''));\nhtml += h2('Decisions needed') + (facts.decisions.length ? table(['ID', 'Decision', 'Owner', 'Needed by', 'Options'], facts.decisions.map(d => row([esc(d.id), esc(d.description), esc(d.owner), esc(d.needBy), esc(d.options)])).join('')) : '<p style=\"font-size:14px\">None open.</p>');\nhtml += h2('Open risks') + (facts.risks.length ? table(['ID', 'Risk', 'Severity', 'Owner', 'Mitigation'], facts.risks.map(r => row([esc(r.id), esc(r.description), esc(r.severity), esc(r.owner), esc(r.options)])).join('')) : '<p style=\"font-size:14px\">None open.</p>');\nhtml += h2('Next 7 days: leadership checkpoints') + (facts.events.length ? ul(facts.events.map(e => `${e.start}: ${e.title}`)) : '<p style=\"font-size:14px\">None in the calendar.</p>');\nif (facts.staleOwners.length) html += h2('Updates missing or stale') + ul(facts.staleOwners.map(s => `${s.name} (${s.owner}): ${s.daysSinceUpdate === null ? 'no update date recorded' : s.daysSinceUpdate + ' days since last update'}`));\nhtml += `<p style=\"font-size:11px;color:#888;margin-top:24px\">${ai ? 'Summary drafted with AI from the data above.' : 'Summary generated by rules, without AI.'} All figures come directly from the source sheets.</p></div>`;\n\nconst subject = `${cfg.reportTitle} | Week of ${facts.weekOf}` + (c.red > 0 ? ` | ${c.red} red` : '') + (c.decisionsDueThisWeek > 0 ? ` | ${c.decisionsDueThisWeek} decision${c.decisionsDueThisWeek === 1 ? '' : 's'} due` : '');\nconst slackText = `*${cfg.reportTitle}, week of ${facts.weekOf}*\\n${headline}\\n:large_green_circle: ${c.green}  :large_yellow_circle: ${c.amber}  :red_circle: ${c.red}  |  Decisions open: ${c.openDecisions}  |  High risks: ${c.highRisks}\\n` +\n  (attention.length ? '*Needs attention*\\n' + attention.map(a => `\u2022 ${a}`).join('\\n') : '');\n\nreturn [{ json: { subject, html, markdown: md.join('\\n'), slackText, aiUsed: !!ai } }];\n"
+      },
+      "id": "n-build",
+      "name": "Build Report",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1680,
+        80
+      ]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "send",
+        "sendTo": "={{ $('Config').first().json.reviewRecipient }}",
+        "subject": "={{ $json.subject }}",
+        "emailType": "html",
+        "message": "={{ $json.html }}",
+        "options": {
+          "appendAttribution": false
+        }
+      },
+      "id": "n-mail",
+      "name": "Email for Review",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1920,
+        0
+      ],
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "REPLACE_ME",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "select": "channel",
+        "channelId": {
+          "__rl": true,
+          "value": "REPLACE_WITH_CHANNEL_ID",
+          "mode": "id"
+        },
+        "text": "={{ $json.slackText }}",
+        "otherOptions": {}
+      },
+      "id": "n-slack",
+      "name": "Slack Post (optional)",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [
+        1920,
+        180
+      ],
+      "disabled": true,
+      "credentials": {
+        "slackApi": {
+          "id": "REPLACE_ME",
+          "name": "Slack account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Monday 07:00": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Run": {
+      "main": [
+        [
+          {
+            "node": "Config",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Config": {
+      "main": [
+        [
+          {
+            "node": "Read Workstreams",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Workstreams": {
+      "main": [
+        [
+          {
+            "node": "Read Risks and Decisions",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Risks and Decisions": {
+      "main": [
+        [
+          {
+            "node": "Read Calendar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read Calendar": {
+      "main": [
+        [
+          {
+            "node": "Consolidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Consolidate": {
+      "main": [
+        [
+          {
+            "node": "AI Executive Summary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Executive Summary": {
+      "main": [
+        [
+          {
+            "node": "Build Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Report": {
+      "main": [
+        [
+          {
+            "node": "Email for Review",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Slack Post (optional)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "Europe/Berlin"
+  },
+  "tags": [],
+  "meta": {
+    "templateCredsSetupCompleted": false
+  }
+}
